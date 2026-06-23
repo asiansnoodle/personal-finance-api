@@ -4,6 +4,7 @@ venv/
 
 # Environment / secrets
 .env
+notes.txt
 
 # Python
 __pycache__/
