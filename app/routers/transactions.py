@@ -74,25 +74,3 @@ def patch_transaction_by_id(transaction_id: int, payload: TransactionUpdate, db:
     db.refresh(result)
 
     return result
-
-# Four endpoints:
-# POST /transactions — creates a transaction. Verify the account_id in the request belongs to the current user before creating — same ownership check as above. Return TransactionResponse.
-# GET /transactions — returns transactions for the current user with optional filtering. Accept filters: TransactionFilter = Depends() and build the query dynamically:
-# query = db.query(Transaction).join(Account).filter(Account.user_id == current_user.id)
-
-# if filters.category:
-#     query = query.filter(Transaction.category == filters.category)
-# if filters.start_date:
-#     query = query.filter(Transaction.transaction_date >= filters.start_date)
-# if filters.end_date:
-#     query = query.filter(Transaction.transaction_date <= filters.end_date)
-# if filters.account_id:
-#     query = query.filter(Transaction.account_id == filters.account_id)
-
-# return query.order_by(Transaction.transaction_date.desc()).all()
-# This pattern of building queries conditionally is something you'll see constantly in real backend code — worth understanding well.
-# GET /transactions/{transaction_id} — single transaction with ownership check.
-# PATCH /transactions/{transaction_id} — partial update using TransactionUpdate. Loop over the schema's fields, skip None values, and use setattr to apply changes to the ORM object, then commit. This is the standard partial update pattern:
-# pythonfor field, value in update_data.model_dump(exclude_none=True).items():
-#     setattr(transaction, field, value)
-# db.commit()
