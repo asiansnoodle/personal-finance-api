@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
 from app.schemas.transaction import TransactionResponse, TransactionCreate, TransactionFilter, TransactionUpdate
 from app.models.transaction import Transaction
 from app.models.user import User
 from app.models.account import Account
+from app.exceptions import FinanceAPIException
 
 router = APIRouter(
     prefix='/transactions',
@@ -16,9 +17,17 @@ def create_transaction(payload: TransactionCreate, db: Session = Depends(get_db)
 
     account = db.query(Account).filter(Account.id == payload.account_id).first()
     if not account:
-        raise HTTPException(status_code=404, detail='Account does not exist')
+        raise FinanceAPIException(
+            status_code=404,
+            error="Not Found",
+            detail="Account does not exist"
+        )
     if account.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail='Account belongs to another user')
+        raise FinanceAPIException(
+            status_code=403,
+            error="Forbidden",
+            detail="Account belongs to another user"
+        )
 
     new_transaction = Transaction(**payload.model_dump())
 
@@ -49,10 +58,18 @@ def get_transaction_by_id(transaction_id: int, db: Session = Depends(get_db), cu
     result = db.query(Transaction).filter(Transaction.id == transaction_id).first()
 
     if not result:
-        raise HTTPException(status_code=404, detail='Transaction not found')
+        raise FinanceAPIException(
+            status_code=404,
+            error="Not Found",
+            detail="Transaction not found"
+        )
     
     if result.account.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail='Transaction belongs to another user')
+        raise FinanceAPIException(
+            status_code=403,
+            error="Forbidden",
+            detail="Transaction belongs to another user"
+        )
     
     return result
 
@@ -62,10 +79,18 @@ def patch_transaction_by_id(transaction_id: int, payload: TransactionUpdate, db:
     result = db.query(Transaction).filter(Transaction.id == transaction_id).first()
 
     if not result:
-        raise HTTPException(status_code=404, detail='Transaction not found')
+        raise FinanceAPIException(
+            status_code=404,
+            error="Not Found",
+            detail="Transaction not found"
+        )
     
     if result.account.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail='Transaction belongs to another user')
+        raise FinanceAPIException(
+            status_code=403,
+            error="Forbidden",
+            detail="Transaction belongs to another user"
+        )
     
     for field, value in payload.model_dump(exclude_none=True).items():
         setattr(result, field, value)

@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
 from app.schemas.account import AccountCreate, AccountResponse
 from app.models.account import Account
 from app.models.user import User
+from app.exceptions import FinanceAPIException
 
 
 router = APIRouter(
@@ -34,9 +35,17 @@ def get_one_account(account_id: int, db: Session = Depends(get_db), current_user
     result = db.query(Account).filter(Account.id == account_id).first()
 
     if not result:
-        raise HTTPException(status_code=404, detail='Account not found')
+        raise FinanceAPIException(
+            status_code=404,
+            error='Not Found',
+            detail=f'Account {account_id} not found'
+        )
     
     if result.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail='Account belongs to another user')
+        raise FinanceAPIException(
+            status_code=403,
+            error="Forbidden",
+            detail="Account belongs to another user"
+        )
     
     return result

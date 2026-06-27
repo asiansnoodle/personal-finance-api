@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.dependencies import get_db, get_current_user
 from app.schemas.budget import BudgetCreate, BudgetResponse, BudgetUpdate
 from app.models.user import User
 from app.models.budget import Budget
+from app.exceptions import FinanceAPIException
 
 router = APIRouter(
     prefix='/budgets',
@@ -21,7 +22,11 @@ def post_budget(payload: BudgetCreate, db: Session = Depends(get_db), current_us
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Budget for this category and period already exists")
+        raise FinanceAPIException(
+            status_code=400,
+            error="Bad Request",
+            detail="Budget for this category and period already exists"
+        )
     
     db.refresh(budget)
     return budget
@@ -44,10 +49,18 @@ def get_budget_by_id(budget_id: int, db: Session = Depends(get_db), current_user
     result = db.query(Budget).filter(Budget.id == budget_id).first()
 
     if not result:
-        raise HTTPException(status_code=404, detail='Budget not found')
+        raise FinanceAPIException(
+            status_code=404,
+            error="Not Found",
+            detail="Budget not found"
+        )
     
     if result.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail='Budget belongs to another user')
+        raise FinanceAPIException(
+            status_code=403,
+            error="Forbidden",
+            detail="Budget belongs to another user"
+        )
     
     return result
 
@@ -57,10 +70,18 @@ def patch_budget_by_id(budget_id: int, payload: BudgetUpdate, db: Session = Depe
     result = db.query(Budget).filter(Budget.id == budget_id).first()
 
     if not result:
-        raise HTTPException(status_code=404, detail='Budget not found')
+        raise FinanceAPIException(
+            status_code=404,
+            error="Not Found",
+            detail="Budget not found"
+        )
     
     if result.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail='Budget belongs to another user')
+        raise FinanceAPIException(
+            status_code=403,
+            error="Forbidden",
+            detail="Budget belongs to another user"
+        )
     
     for field, value in payload.model_dump(exclude_none=True).items():
         setattr(result, field, value)
@@ -69,7 +90,11 @@ def patch_budget_by_id(budget_id: int, payload: BudgetUpdate, db: Session = Depe
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Budget for this category and period already exists")
+        raise FinanceAPIException(
+            status_code=400,
+            error="Bad Request",
+            detail="Budget for this category and period already exists"
+        )
     
     db.refresh(result)
     return result
