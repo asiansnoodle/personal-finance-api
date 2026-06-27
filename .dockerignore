@@ -1,0 +1,35 @@
+# Version control
+.git
+.gitignore
+
+# Secrets / local env
+.env
+notes.txt
+
+# Python caches & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+
+# Coverage
+.coverage
+htmlcov/
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Docker / compose (not needed inside the image)
+Dockerfile
+.dockerignore
+docker-compose.yml
