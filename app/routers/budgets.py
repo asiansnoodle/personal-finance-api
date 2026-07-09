@@ -98,3 +98,16 @@ def patch_budget_by_id(budget_id: int, payload: BudgetUpdate, db: Session = Depe
     
     db.refresh(result)
     return result
+
+@router.delete('/{budget_id}', status_code=204)
+def delete_budget_by_id(budget_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    result = db.query(Budget).filter(Budget.id == budget_id).first()
+
+    if not result:
+        raise FinanceAPIException(status_code=404, error='Not Found', detail='Budget not found')
+    
+    if result.user_id != current_user.id:
+        raise FinanceAPIException(status_code=403, error='Forbidden', detail='Budget belongs to another user')
+    
+    db.delete(result)
+    db.commit()

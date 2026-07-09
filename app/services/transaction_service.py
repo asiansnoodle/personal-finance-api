@@ -60,3 +60,8 @@ def update_transaction(db: Session, transaction_id: int, payload: TransactionUpd
     db.commit()
     db.refresh(transaction)
     return transaction
+
+def delete_transaction(db: Session, transaction_id: int, current_user: User) -> None:
+    transaction = _get_owned_transaction(db, transaction_id, current_user.id)
+    db.delete(transaction)
+    db.commit()

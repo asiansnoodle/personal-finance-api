@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
 from app.schemas.transaction import TransactionResponse, TransactionCreate, TransactionFilter, TransactionUpdate
 from app.models.user import User
-from app.services.transaction_service import (create_transaction, get_transactions, get_transaction_by_id, update_transaction)
+from app.services.transaction_service import (create_transaction, get_transactions, get_transaction_by_id, update_transaction, delete_transaction)
 
 router = APIRouter(
     prefix='/transactions',
@@ -28,3 +28,7 @@ def get_transaction_by_id_route(transaction_id: int, db: Session = Depends(get_d
 @router.patch('/{transaction_id}', response_model=TransactionResponse)
 def patch_transaction_route(transaction_id: int, payload: TransactionUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return update_transaction(db, transaction_id, payload, current_user)
+
+@router.delete('/{transaction_id}', status_code=204)
+def delete_transaction_route(transaction_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    delete_transaction(db, transaction_id, current_user)

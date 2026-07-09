@@ -4,6 +4,7 @@ from app.dependencies import get_db, get_current_user
 from app.schemas.account import AccountCreate, AccountResponse
 from app.models.account import Account
 from app.models.user import User
+from app.models.transaction import Transaction
 from app.exceptions import FinanceAPIException
 
 
@@ -49,3 +50,20 @@ def get_one_account(account_id: int, db: Session = Depends(get_db), current_user
         )
     
     return result
+
+@router.delete('/{account_id}', status_code=204)
+def delete_account(account_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    result = db.query(Account).filter(Account.id == account_id).first()
+
+    if not result:
+        raise FinanceAPIException(status_code=404, error='Not Found', detail=f"Account {account_id} not found")
+    
+    if result.user_id != current_user.id:
+        raise FinanceAPIException(status_code=403, error='Forbidden', detail='Account belongs to another user')
+    
+    has_transactions = db.query(Transaction).filter(Transaction.account_id == account_id).first()
+    if has_transactions:
+        raise FinanceAPIException(status_code=400, error="Bad Request", detail="Cannot delete account with existing transactions")
+    
+    db.delete(result)
+    db.commit()
