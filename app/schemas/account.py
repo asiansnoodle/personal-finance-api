@@ -21,6 +21,12 @@ class AccountResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class AccountUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    account_type: AccountType | None = None
+    balance: Decimal | None = None
+    currency: str | None = Field(default=None, min_length=3, max_length=3)
+
 class AccountSummary(BaseModel):
     id: int
     name: str

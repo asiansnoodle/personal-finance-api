@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
-from app.schemas.account import AccountCreate, AccountResponse
+from app.schemas.account import AccountCreate, AccountResponse, AccountUpdate
 from app.models.account import Account
 from app.models.user import User
 from app.models.transaction import Transaction
@@ -49,6 +49,24 @@ def get_one_account(account_id: int, db: Session = Depends(get_db), current_user
             detail="Account belongs to another user"
         )
     
+    return result
+
+@router.patch('/{account_id}', response_model=AccountResponse)
+def patch_account(account_id: int, payload: AccountUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    result = db.query(Account).filter(Account.id == account_id).first()
+
+    if not result:
+        raise FinanceAPIException(status_code=404, error='Not Found', detail=f'Account {account_id} not found')
+
+    if result.user_id != current_user.id:
+        raise FinanceAPIException(status_code=403, error='Forbidden', detail='Account belongs to another user')
+
+    for field, value in payload.model_dump(exclude_none=True).items():
+        setattr(result, field, value)
+
+    db.commit()
+    db.refresh(result)
+
     return result
 
 @router.delete('/{account_id}', status_code=204)
