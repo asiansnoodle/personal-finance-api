@@ -105,3 +105,9 @@ def test_delete_account_wrong_user(client, auth_headers):
 
     response = client.delete(f"/accounts/{other_account['id']}", headers=auth_headers)
     assert response.status_code == 403
+
+def test_create_account_invalid_type(client, auth_headers):
+    response = client.post("/accounts", json={
+        "name": "Bad Account", "account_type": "piggybank", "balance": "0.00", "currency": "USD"
+    }, headers=auth_headers)
+    assert response.status_code == 422
