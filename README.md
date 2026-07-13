@@ -86,6 +86,23 @@ uvicorn app.main:app --reload
 
 ---
 
+## Running Tests
+
+The test suite spins up against a dedicated Postgres database (kept separate from your dev data) and drives the API through `TestClient`.
+
+```bash
+docker compose up -d db                            # start Postgres (host port 5433)
+docker compose exec db createdb -U financeuser financedb_test   # one-time: create the test database
+
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+pytest -v
+```
+
+---
+
 ## API Documentation
 
 FastAPI generates interactive docs automatically:
@@ -106,14 +123,18 @@ Both are live against the running app — you can authenticate and exercise ever
 | GET    | `/accounts`                     | List the user's accounts                 | Yes  |
 | POST   | `/accounts`                     | Create an account                        | Yes  |
 | GET    | `/accounts/{account_id}`        | Get a single account                     | Yes  |
+| PATCH  | `/accounts/{account_id}`        | Update an account                        | Yes  |
+| DELETE | `/accounts/{account_id}`        | Delete an account (blocked if it has transactions) | Yes  |
 | GET    | `/transactions`                 | List transactions (with filters)         | Yes  |
 | POST   | `/transactions`                 | Create a transaction                     | Yes  |
 | GET    | `/transactions/{transaction_id}`| Get a single transaction                 | Yes  |
 | PATCH  | `/transactions/{transaction_id}`| Update a transaction                     | Yes  |
+| DELETE | `/transactions/{transaction_id}`| Delete a transaction                     | Yes  |
 | GET    | `/budgets`                      | List budgets (with filters)              | Yes  |
 | POST   | `/budgets`                      | Create a budget                          | Yes  |
 | GET    | `/budgets/{budget_id}`          | Get a single budget                      | Yes  |
 | PATCH  | `/budgets/{budget_id}`          | Update a budget                          | Yes  |
+| DELETE | `/budgets/{budget_id}`          | Delete a budget                          | Yes  |
 | GET    | `/analytics/summary`            | Monthly spend by category                | Yes  |
 | GET    | `/analytics/variance`           | Budget vs. actual spend per category     | Yes  |
 
@@ -134,10 +155,9 @@ Both are live against the running app — you can authenticate and exercise ever
 ## Future Improvements
 
 - **Plaid API integration** for syncing real bank account and transaction data.
-- **Transaction service layer** — extract the remaining transaction logic out of the router into a dedicated service for consistency with the rest of the codebase.
 - **Redis caching** for analytics endpoints, which run aggregate queries that are read-heavy and change infrequently within a month.
-- **Test suite** — unit tests for services and integration tests covering the auth and ownership flows.
 - **CI/CD pipeline** with GitHub Actions — automated linting, tests, and image builds on every push.
+- **Expand test coverage to transactions** — accounts, budgets, auth, and analytics all have dedicated test files; transactions (the most fully service-layered resource) doesn't yet.
 
 ---
 
